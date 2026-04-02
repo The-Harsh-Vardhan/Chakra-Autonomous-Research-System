@@ -1,0 +1,18 @@
+inherits: configs/nlp_lm/base.yaml
+
+runtime:
+  version: v1.0
+  lineage: scratch
+  parent: null
+
+project:
+  group: v1.0-control
+  tags: [phase1, nlp, v1.0, scratch, control, bigram]
+
+model:
+  kind: bigram
+
+training:
+  epochs: 1
+  max_train_batches: 0
+  checkpoint_name: v1.0_control.pt

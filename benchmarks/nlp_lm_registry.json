@@ -1,0 +1,12 @@
+{
+  "lane": "NLP LM",
+  "control_baselines": {
+    "bigram_baseline": {
+      "dataset": "tiny_shakespeare",
+      "val_bpb": 3.5,
+      "val_perplexity": 11.31,
+      "source": "untrained bigram baseline estimate"
+    }
+  },
+  "paper_targets": []
+}

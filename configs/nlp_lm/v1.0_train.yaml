@@ -1,0 +1,14 @@
+inherits: configs/nlp_lm/base.yaml
+
+runtime:
+  version: v1.0
+  lineage: scratch
+  parent: null
+
+project:
+  group: v1.0-train
+  tags: [phase1, nlp, v1.0, scratch, train, gpt_nano]
+
+training:
+  epochs: 5
+  checkpoint_name: v1.0_train_best.pt

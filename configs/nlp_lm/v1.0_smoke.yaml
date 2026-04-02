@@ -1,0 +1,19 @@
+inherits: configs/nlp_lm/base.yaml
+
+runtime:
+  version: v1.0
+  lineage: scratch
+  parent: null
+
+project:
+  group: v1.0-smoke
+  tags: [phase1, nlp, v1.0, scratch, smoke, gpt_nano]
+
+training:
+  epochs: 1
+  max_train_batches: 10
+  max_val_batches: 5
+  checkpoint_name: v1.0_smoke_best.pt
+
+data:
+  batch_size: 8
