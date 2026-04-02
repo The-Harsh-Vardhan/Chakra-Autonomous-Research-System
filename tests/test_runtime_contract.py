@@ -1,17 +1,21 @@
+"""Tests for the HNDSR runtime contracts."""
+
+import pytest
+
+try:
+    import torch
+    HAS_TORCH = True
+except ImportError:
+    HAS_TORCH = False
+
+pytestmark = pytest.mark.skipif(not HAS_TORCH, reason="torch not installed")
+
 from pathlib import Path
 from uuid import uuid4
 
-import torch
-from PIL import Image
-
-from autoresearch_hv.hndsr_vr.dataset import SyntheticSatellitePairDataset, build_loaders
-from autoresearch_hv.hndsr_vr.lifecycle import render_notebook, resolve_version_paths
-from autoresearch_hv.hndsr_vr.models import SR3Baseline
-from autoresearch_hv.hndsr_vr.tracker import NullTracker
-from autoresearch_hv.hndsr_vr.utils import load_config, version_slug, version_stem
-
 
 def _write_fake_image(path: Path, color: tuple[int, int, int], size: tuple[int, int] = (96, 96)) -> None:
+    from PIL import Image
     path.parent.mkdir(parents=True, exist_ok=True)
     image = Image.new("RGB", size, color=color)
     image.save(path)
@@ -26,11 +30,13 @@ def _fresh_dir(name: str) -> Path:
 
 
 def test_version_helpers():
+    from autoresearch_hv.hndsr_vr.utils import version_stem, version_slug
     assert version_stem("vR.1") == "vR.1_HNDSR"
     assert version_slug("vR.1") == "vr1-hndsr"
 
 
 def test_sr3_forward_loss_contract():
+    from autoresearch_hv.hndsr_vr.models import SR3Baseline
     model = SR3Baseline(model_channels=16, num_timesteps=32, beta_start=1.0e-4, beta_end=0.02)
     lr_upscaled = torch.randn(2, 3, 64, 64)
     hr = torch.randn(2, 3, 64, 64)
@@ -40,6 +46,7 @@ def test_sr3_forward_loss_contract():
 
 
 def test_null_tracker_accepts_logs():
+    from autoresearch_hv.hndsr_vr.tracker import NullTracker
     tracker = NullTracker(run_dir="artifacts/.tmp/test-null-tracker")
     tracker.log_metrics({"loss": 1.0}, step=1)
     tracker.log_text("status", "ok")
@@ -47,6 +54,7 @@ def test_null_tracker_accepts_logs():
 
 
 def test_synthetic_dataset_generates_deterministic_4x_pair():
+    from autoresearch_hv.hndsr_vr.dataset import SyntheticSatellitePairDataset
     root = _fresh_dir("synthetic-ucmerced")
     _write_fake_image(root / "airport" / "sample_001.png", (200, 100, 50))
     dataset = SyntheticSatellitePairDataset(str(root), patch_size=64, training=False, scale_factor=4)
@@ -61,6 +69,8 @@ def test_synthetic_dataset_generates_deterministic_4x_pair():
 
 
 def test_kaggle_pairing_lane_preserves_traceable_names():
+    from autoresearch_hv.hndsr_vr.dataset import build_loaders
+    from autoresearch_hv.hndsr_vr.utils import load_config
     root = _fresh_dir("kaggle-paired")
     hr_root = root / "kaggle" / "HR"
     lr_root = root / "kaggle" / "LR"
@@ -82,6 +92,7 @@ def test_kaggle_pairing_lane_preserves_traceable_names():
 
 
 def test_rendered_notebook_contains_required_contract_fragments():
+    from autoresearch_hv.hndsr_vr.lifecycle import resolve_version_paths, render_notebook
     paths = resolve_version_paths("vR.9")
     notebook = render_notebook("vR.9", parent="vR.8", paths=paths)
     assert "## Weights & Biases Setup" in notebook
