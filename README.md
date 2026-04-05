@@ -51,6 +51,8 @@ Unlike monolithic experiment scripts, AutoResearch separates **what** you resear
 
 ## Quick Start
 
+> 📖 **For the full guide** see [How to Use AutoResearch](docs/how_to_use.md) — covers every command, config option, W&B setup, troubleshooting, and how to add your own domain. For a 5-minute walkthrough, see the [Quickstart](docs/quickstart.md).
+
 ### 1. Clone & Install
 
 ```bash
