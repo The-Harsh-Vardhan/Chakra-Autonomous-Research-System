@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="CHAKRA Logo.png" alt="Chakra Logo" width="200"/>
+  <img src="CHAKRA%20Logo.png" alt="Chakra Logo" width="200"/>
 </p>
 
 # Chakra — Autonomous Research System
