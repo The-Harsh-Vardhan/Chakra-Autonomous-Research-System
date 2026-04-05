@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="CHAKRA%20Logo.png" alt="Chakra Logo" width="200"/>
+  <img src="assets/chakra_logo_white.png" alt="Chakra Logo" width="200"/>
 </p>
 
 # Chakra — Autonomous Research System
@@ -14,6 +14,8 @@
 **A cyclic, autonomous research engine that plans, trains, guards, reviews, and improves ML experiments — then repeats.**
 
 Chakra eliminates manual experiment management. You define a research domain once. Chakra handles the rest: scaffolding configs, running baselines, training models, evaluating checkpoints, validating contracts, generating reviews, and proposing the next iteration. One command runs the entire loop.
+
+> 📖 **[Read the Journey](JOURNEY.md)** — How this project evolved from a single Kaggle notebook to a cyclic autonomous system.
 
 ```bash
 chakra aavart --domain tabular_cls --version v1.0 --device cpu --force
@@ -78,13 +80,13 @@ Each stage has a Sanskrit name that reflects its purpose:
 
 ## Quick Start
 
-> 📖 **For the full guide** see [How to Use Chakra](docs/how_to_use.md) — covers every command, config option, W&B setup, troubleshooting, and how to add your own domain. For a 5-minute walkthrough, see the [Quickstart](docs/quickstart.md).
+> 📖 **For the full guide** see [How to Use Chakra](docs/how_to_use.md) — covers every command, config option, W&B setup, troubleshooting, and how to add your own domain. For a 5-minute walkthrough, see the [Quickstart](docs/quickstart.md). For the project's evolution story, see the [Journey](JOURNEY.md).
 
 ### 1. Install
 
 ```bash
-git clone https://github.com/The-Harsh-Vardhan/autoresearch-by-harsh-vardhan.git
-cd autoresearch-by-harsh-vardhan
+git clone https://github.com/The-Harsh-Vardhan/Chakra-Autonomous-Research-System.git
+cd Chakra-Autonomous-Research-System
 python -m venv .venv && .venv/Scripts/activate   # Windows
 pip install -e ".[dev]"
 ```
@@ -268,11 +270,13 @@ src/chakra/domains/my_domain/
 ```
 
 Register in `pyproject.toml`:
+
 ```toml
 "chakra.domains.my_domain" = ["domain.yaml"]
 ```
 
 Then:
+
 ```bash
 chakra list-domains    # Your domain appears automatically
 chakra aavart --domain my_domain --version v1.0 --device cpu

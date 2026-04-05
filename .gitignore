@@ -36,6 +36,7 @@ reports/generated/*
 # Binary outputs
 *.pt
 *.png
+!assets/*.png
 *.jsonl
 
 # Jupyter

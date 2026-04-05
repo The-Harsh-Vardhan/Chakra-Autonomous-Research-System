@@ -1,11 +1,11 @@
-# Contributing to AutoResearch
+# Contributing to Chakra
 
 ## Development Setup
 
 ```bash
 # Clone the repo
-git clone https://github.com/The-Harsh-Vardhan/autoresearch-by-harsh-vardhan.git
-cd autoresearch-by-harsh-vardhan
+git clone https://github.com/The-Harsh-Vardhan/Chakra-Autonomous-Research-System.git
+cd Chakra-Autonomous-Research-System
 
 # Create a virtual environment
 python -m venv .venv
