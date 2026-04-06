@@ -1,6 +1,6 @@
-# How to Use AutoResearch — Complete Guide
+# How to Use Chakra — Complete Guide
 
-This guide covers everything you need to know to use AutoResearch: from installation to running experiments, understanding results, tracking with W&B, extending the framework, and troubleshooting.
+This guide covers everything you need to know to use Chakra: from installation to running experiments, understanding results, tracking with W&B, extending the framework, and troubleshooting.
 
 ---
 
@@ -12,7 +12,7 @@ This guide covers everything you need to know to use AutoResearch: from installa
 4. [Running Your First Experiment](#4-running-your-first-experiment)
 5. [The Seven-Step Lifecycle](#5-the-seven-step-lifecycle)
 6. [Configuration System](#6-configuration-system)
-7. [Weights & Biases Integration](#7-weights--biases-integration)
+7. [Weights & Biases Integration](#7-weights-biases-integration)
 8. [CLI Reference](#8-cli-reference)
 9. [Working with Each Domain](#9-working-with-each-domain)
 10. [Adding Your Own Domain](#10-adding-your-own-domain)
@@ -34,8 +34,8 @@ This guide covers everything you need to know to use AutoResearch: from installa
 
 ```bash
 # Clone the repository
-git clone https://github.com/The-Harsh-Vardhan/autoresearch-by-harsh-vardhan.git
-cd autoresearch-by-harsh-vardhan
+git clone https://github.com/The-Harsh-Vardhan/Chakra-Autonomous-Research-System.git
+cd Chakra-Autonomous-Research-System
 
 # Create a virtual environment
 python -m venv .venv
@@ -75,9 +75,9 @@ If you see all three domains, you're ready to go.
 ## 2. Project Structure
 
 ```
-autoresearch-by-harsh-vardhan/
+Chakra-Autonomous-Research-System/
 │
-├── src/chakra/               # Python source code
+├── src/chakra/                        # Python source code
 │   ├── core/                          # Domain-agnostic engine (never touch for new domains)
 │   │   ├── interfaces.py              # DomainLifecycleHooks protocol
 │   │   ├── domain_registry.py         # Auto-discovers domains
@@ -90,7 +90,8 @@ autoresearch-by-harsh-vardhan/
 │   │   ├── nlp_lm/                    # Character-level language model (NLP)
 │   │   └── tabular_cls/               # Tabular classification (ML)
 │   │
-│   └── cli.py                         # CLI entrypoint with --domain dispatch
+│    └── cli.py                         # Traditional CLI (python -m chakra)
+│   └── chakra_cli.py                  # Chakra CLI (chakra sutra/yantra/...)
 │
 ├── configs/                           # YAML configuration files
 │   ├── hndsr_vr/                      # Per-domain config sets
@@ -313,7 +314,7 @@ Here's every field supported in a config file:
 seed: 42                              # Random seed for reproducibility
 
 project:
-  name: autoresearch-by-harsh-vardhan  # W&B project name
+  name: chakra                        # W&B project name
   group: v1.0-train                    # W&B run group
   tags: [tabular, classification]      # W&B tags
 
@@ -335,7 +336,7 @@ data:
 tracking:
   enabled: true                        # Enable W&B tracking
   mode: online                         # "online", "offline", or "disabled"
-  project: autoresearch-by-harsh-vardhan
+  project: chakra
   entity: null                         # W&B team/entity (null for personal)
   notes: "Description of this run"     # Shown in W&B dashboard
 
@@ -429,9 +430,37 @@ After a run with `mode: online`, go to your W&B dashboard:
 
 ## 8. CLI Reference
 
-The CLI entrypoint is `python -m chakra`.
+The CLI has two interfaces: the **Chakra CLI** (`chakra` command) and the **Traditional CLI** (`python -m chakra`).
 
-### Global Options
+### Chakra CLI (Recommended)
+
+The Chakra CLI maps each command to a stage of the research cycle:
+
+```bash
+chakra <command> --domain DOMAIN [OPTIONS]
+```
+
+| Command | Stage | Description |
+|---------|-------|-------------|
+| `chakra sutra` | Plan | Scaffold version assets and freeze configs |
+| `chakra yantra` | Execute | Run training or evaluation (`--stage control\|smoke\|train\|eval`) |
+| `chakra rakshak` | Guard | Validate version contract (all required files exist) |
+| `chakra vimarsh` | Review | Sync results and generate structured review |
+| `chakra manthan` | Improve | Propose ablation suggestions for next iteration |
+| `chakra aavart` | Full Cycle | Run the complete loop: Plan → Execute → Guard → Review → Improve |
+| `chakra list-domains` | Discovery | List all auto-discovered domains |
+
+**One-command full cycle:**
+
+```bash
+chakra aavart --domain tabular_cls --version v1.0 --device cpu --force
+```
+
+### Traditional CLI
+
+The traditional entrypoint is `python -m chakra`.
+
+#### Global Options
 
 ```bash
 python -m chakra [--domain DOMAIN_NAME] COMMAND [OPTIONS]
@@ -467,6 +496,22 @@ python -m chakra --domain tabular_cls domain-info
 | `push-kaggle` | `--version V` `[--title T]` `[--username U]` `[--dry-run]` | Push notebook to Kaggle |
 | `kaggle-status` | `--version V` `[--username U]` `[--dry-run]` | Check kernel run status |
 | `pull-kaggle` | `--version V` `[--username U]` `[--dry-run]` | Pull outputs into artifacts |
+
+### Execution Orchestration
+
+The `run-execution` command chooses between local and Kaggle execution paths and always runs a local smoke gate before Kaggle submission.
+
+```bash
+python -m chakra --domain nlp_lm run-execution --version v1.0 --strategy auto --dry-run
+python -m chakra --domain tabular_cls run-execution --version v1.0 --strategy local --dry-run
+```
+
+Behavior summary:
+
+- `local` runs the train runner directly.
+- `kaggle` performs a local smoke gate first, then push/status/pull.
+- `auto` uses manifest lifecycle/execution hints and system info to choose a backend.
+- `--dry-run` prints the command flow without invoking the backend tools.
 
 ### Runner Commands (Direct)
 
@@ -562,7 +607,7 @@ python -m chakra --domain nlp_lm validate-version --version v1.0
 
 ## 10. Adding Your Own Domain
 
-AutoResearch is designed to be extended. Adding a new domain requires **zero changes** to the core engine.
+AutoResearch is designed to be extended. Adding a new domain requires **zero changes** to the core engine. See [Contributing](contributing.md) for the full tutorial.
 
 ### Step-by-Step
 
@@ -799,6 +844,9 @@ python -m chakra.domains.DOMAIN.evaluate_runner --config configs/DOMAIN/VERSION_
 python -m chakra --domain DOMAIN sync-run --version VERSION --source-dir artifacts/VERSION-train
 python -m chakra --domain DOMAIN review-run --version VERSION
 python -m chakra --domain DOMAIN validate-version --version VERSION
+
+# ---- Chakra CLI (one-command cycle) ----
+chakra aavart --domain DOMAIN --version VERSION --device cpu --force
 
 # ---- Testing ----
 python -m pytest tests/ -v

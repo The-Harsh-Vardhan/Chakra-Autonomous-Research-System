@@ -1,6 +1,8 @@
-# AutoResearch Quick Start Guide
+# Chakra Quick Start Guide
 
 This guide walks you through a complete end-to-end experiment in under 5 minutes.
+
+> **One-command alternative:** If you just want to see the full cycle, skip to [Run Everything At Once](#run-everything-at-once) after installing.
 
 ---
 
@@ -16,8 +18,8 @@ This guide walks you through a complete end-to-end experiment in under 5 minutes
 
 ```bash
 # Clone the repo
-git clone https://github.com/The-Harsh-Vardhan/autoresearch-by-harsh-vardhan.git
-cd autoresearch-by-harsh-vardhan
+git clone https://github.com/The-Harsh-Vardhan/Chakra-Autonomous-Research-System.git
+cd Chakra-Autonomous-Research-System
 
 # Create and activate a virtual environment
 python -m venv .venv
@@ -120,6 +122,18 @@ python -m chakra --domain tabular_cls validate-version --version v1.0
 **Expected output:** `v1.0 contract passed for domain 'tabular_cls'.`
 
 🎉 **Congratulations!** You've just completed a full lifecycle loop.
+
+---
+
+## Run Everything At Once
+
+Instead of running each stage individually, use the Chakra CLI to run the complete cycle with one command:
+
+```bash
+chakra aavart --domain tabular_cls --version v1.0 --device cpu --force
+```
+
+This orchestrates the full Aavart (cycle): Plan → Execute → Guard → Review → Improve.
 
 ---
 
@@ -229,6 +243,6 @@ The core `lifecycle.py` calls these hooks — it never contains domain-specific 
 ## Next Steps
 
 - **Add W&B tracking** — Set up your `.env` and rerun experiments to see them in the W&B dashboard
-- **Add a new domain** — Follow the guide in [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **Add a new domain** — Follow the guide in [Contributing](contributing.md)
 - **Push to Kaggle** — Use `push-kaggle` and `pull-kaggle` commands for cloud execution
 - **Extend the framework** — Add custom metrics, models, or datasets to existing domains
