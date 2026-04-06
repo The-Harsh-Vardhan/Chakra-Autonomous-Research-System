@@ -1,108 +1,237 @@
 # Command Reference
 
-This page documents the commands exposed by the Chakra CLIs.
+This page documents both command surfaces:
 
-## Discovery
+- `python -m chakra` (full lifecycle + execution + Kaggle utility surface)
+- `chakra` (Chakra-branded stage aliases)
+
+## Global argument pattern
+
+Most `python -m chakra` commands require a domain.
+
+```bash
+python -m chakra --domain <domain_name> <command> [options]
+```
+
+Commands that do not require `--domain`:
+
+- `list-domains`
+
+## Discovery commands
 
 ### `python -m chakra list-domains`
 
-Lists all discovered research domains with their display names and primary metrics.
+Lists discovered domains in a table.
+
+```bash
+python -m chakra list-domains
+```
+
+Representative output:
+
+```text
+Name                 Display Name                             Primary Metric
+--------------------------------------------------------------------------------
+hndsr_vr             HNDSR Satellite Super-Resolution         psnr_mean
+nlp_lm               NLP Language Modelling                   val_bpb
+tabular_cls          Tabular Classification                   accuracy
+```
 
 ### `python -m chakra domain-info`
 
-Shows the manifest metadata for a single domain.
+Shows manifest details for one domain.
 
-Required argument:
+Arguments:
 
-- `--name` or `--domain`
+- `--name` optional if `--domain` is already set
 
-## Planning
+Examples:
+
+```bash
+python -m chakra domain-info --name tabular_cls
+python -m chakra --domain tabular_cls domain-info
+```
+
+Representative output:
+
+```text
+Name:             tabular_cls
+Display Name:     Tabular Classification
+Version Pattern:  ^v\d+\.\d+$
+Model Kinds:      logistic_regression, mlp
+Primary Metric:   accuracy (max)
+```
+
+## Planning commands
 
 ### `python -m chakra scaffold-version`
 
-Creates the notebook, version docs, review template, and config files for a domain version.
+Creates notebook/doc/review/config assets for a version.
 
-Required arguments:
+Arguments:
 
-- `--version`
+- `--version` required
+- `--parent` optional
+- `--lineage {scratch,pretrained}` optional, default `scratch`
+- `--force` optional
 
-Optional arguments:
+Example:
 
-- `--parent`
-- `--lineage {scratch,pretrained}`
-- `--force`
+```bash
+python -m chakra --domain tabular_cls scaffold-version --version v1.0 --force
+```
 
 ### `chakra sutra`
 
-Chakra-branded alias for the same plan-scaffolding step.
+Chakra alias of the planning stage.
 
-Required arguments:
+```bash
+chakra sutra --domain tabular_cls --version v1.0 --force
+```
 
-- `--domain`
-- `--version`
-
-Optional arguments:
-
-- `--parent`
-- `--lineage {scratch,pretrained}`
-- `--force`
-
-## Execution
+## Execution commands
 
 ### `python -m chakra run-execution`
 
-Runs a version using the configured strategy.
+Runs orchestration using local/Kaggle/auto strategy.
 
-Optional strategy values:
+Arguments:
 
-- `local`
-- `kaggle`
-- `auto`
+- `--version` required
+- `--strategy {local,kaggle,auto}` optional, default `auto`
+- `--title` optional (Kaggle title override)
+- `--username` optional (Kaggle user override)
+- `--pull-outputs` optional
+- `--dry-run` optional
 
-Useful flags:
+Examples:
 
-- `--pull-outputs` to pull outputs after Kaggle completion
-- `--dry-run` to print the decision flow without mutating state
+```bash
+python -m chakra --domain tabular_cls run-execution --version v1.0 --strategy local
+python -m chakra --domain tabular_cls run-execution --version v1.0 --strategy auto --pull-outputs
+python -m chakra --domain tabular_cls run-execution --version v1.0 --strategy kaggle --dry-run
+```
+
+Representative output:
+
+```text
+Resolved train config: .../configs/tabular_cls/v1.0_train.yaml
+Requested execution strategy: auto
+Execution decision: local (system profile prefers local execution)
+```
 
 ### `chakra yantra`
 
-Chakra-branded execution command.
+Runs one execution stage directly.
 
-Required arguments:
+Arguments:
 
-- `--domain`
-- `--version`
-- `--stage {control,smoke,train,eval}`
+- `--version` required
+- `--stage {control,smoke,train,eval}` required
+- `--device` optional, default `cpu`
 
-Optional arguments:
+Examples:
 
-- `--device`
+```bash
+chakra yantra --domain tabular_cls --version v1.0 --stage train --device cpu
+chakra yantra --domain tabular_cls --version v1.0 --stage eval --device cpu
+```
 
-## Validation and review
+## Kaggle utility commands
 
-### `python -m chakra validate-version`
+### `python -m chakra push-kaggle`
 
-Checks that the version contract is complete and that required files exist.
+Prepares kernel metadata and pushes notebook bundle.
+
+Arguments:
+
+- `--version` required
+- `--title` optional
+- `--username` optional
+- `--dry-run` optional
+
+### `python -m chakra kaggle-status`
+
+Checks Kaggle kernel status.
+
+Arguments:
+
+- `--version` required
+- `--username` optional
+- `--dry-run` optional
+
+### `python -m chakra pull-kaggle`
+
+Pulls Kaggle outputs into artifacts.
+
+Arguments:
+
+- `--version` required
+- `--username` optional
+- `--dry-run` optional
+
+## Sync, review, and improvement commands
 
 ### `python -m chakra sync-run`
 
-Indexes a run directory into the structured manifest used by reviews.
+Indexes a run directory into run manifest data.
+
+Arguments:
+
+- `--version` required
+- `--source-dir` optional
+- `--wandb-url` optional
+- `--dry-run` optional
 
 ### `python -m chakra review-run`
 
-Generates the human-readable review for a version.
+Generates review output for a version.
+
+Arguments:
+
+- `--version` required
 
 ### `python -m chakra next-ablation`
 
-Writes bounded follow-up ablation ideas for the next iteration.
+Writes bounded follow-up suggestions.
 
-## Chakra aliases
+Arguments:
 
-| Alias | Meaning | Maps to |
+- `--version` required
+
+### `python -m chakra mirror-obsidian`
+
+Writes or previews an Obsidian mirror note for a run.
+
+Arguments:
+
+- `--version` required
+- `--output-dir` optional
+- `--dry-run` optional
+
+## Validation command
+
+### `python -m chakra validate-version`
+
+Validates version contract completeness.
+
+Arguments:
+
+- `--version` required
+
+Representative success output:
+
+```text
+v1.0 contract passed for domain 'tabular_cls'.
+```
+
+## Chakra lifecycle aliases
+
+| Alias | Stage | Description |
 |---|---|---|
-| `chakra sutra` | Plan | Scaffold version assets |
-| `chakra yantra` | Execute | Train or evaluate |
-| `chakra rakshak` | Guard | Validate the version contract |
-| `chakra vimarsh` | Review | Sync outputs and generate a review |
+| `chakra sutra` | Plan | Scaffold and freeze assets |
+| `chakra yantra` | Execute | Run a selected execution stage |
+| `chakra rakshak` | Guard | Validate version contract |
+| `chakra vimarsh` | Review | Sync and generate review |
 | `chakra manthan` | Improve | Generate ablation suggestions |
-| `chakra aavart` | Full cycle | Run the complete lifecycle |
+| `chakra aavart` | Full cycle | Run full Sutra→Yantra→Rakshak→Vimarsh→Manthan loop |

@@ -37,3 +37,10 @@ Chakra keeps both entry points:
 - `python -m chakra ...` for the lower-level domain and execution commands
 
 Use the Chakra CLI for the normal workflow. Use the Python module entry point when you need the broader domain lifecycle surface.
+
+## Next pages
+
+- [CLI Cheatsheet](cheatsheet.md) for fast day-to-day command lookup.
+- [Command Reference](commands.md) for all commands and flags.
+- [Execution Guide](execution.md) for `run-execution` behavior and strategy routing.
+- [Workflow Recipes](workflows.md) for real-world command sequences.
