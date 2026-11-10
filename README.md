@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/The-Harsh-Vardhan/Chakra-Autonomous-Research-System/main/assets/chakra_logo_white.png" alt="Chakra Logo" width="200"/>
-</p>
-
 # Chakra — Autonomous Research System
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -9,14 +5,13 @@
 [![PyTorch 2.2+](https://img.shields.io/badge/PyTorch-2.2+-ee4c2c.svg)](https://pytorch.org)
 [![W&B Tracking](https://img.shields.io/badge/W%26B-Tracked-orange.svg)](https://wandb.ai)
 [![Docs](https://img.shields.io/badge/Docs-Chakra%20CLI-0d9488.svg)](https://the-harsh-vardhan.github.io/Chakra-Autonomous-Research-System/)
-[![47 Tests Passed](https://img.shields.io/badge/Tests-47%20Passed-brightgreen.svg)](#testing)
-[![3 Domains](https://img.shields.io/badge/Domains-3%20Shipped-purple.svg)](#shipped-domains)
+[![66 Tests](https://img.shields.io/badge/Tests-66%20test%20functions-brightgreen.svg)](#testing)
+[![3 Domains](https://img.shields.io/badge/Domains-3%20Shipped-purple.svg)](#shipped-domains--results)
 
 **A cyclic, autonomous research engine that plans, trains, guards, reviews, and improves ML experiments — then repeats.**
 
 Chakra eliminates manual experiment management. You define a research domain once. Chakra handles the rest: scaffolding configs, running baselines, training models, evaluating checkpoints, validating contracts, generating reviews, and proposing the next iteration. One command runs the entire loop.
 
-> 📖 **[Read the Journey](JOURNEY.md)** — How this project evolved from a single Kaggle notebook to a cyclic autonomous system.
 > 📚 **[Open the Chakra CLI docs](https://the-harsh-vardhan.github.io/Chakra-Autonomous-Research-System/)** — The canonical command reference, execution guide, and troubleshooting hub.
 
 ```bash
@@ -27,25 +22,43 @@ This single command executes the full research cycle — from creating the exper
 
 ---
 
-## The Cycle
+## What it does
 
-Every experiment in Chakra follows a five-stage loop:
+- **Scaffolds** a versioned experiment (notebook, docs, review template, three frozen configs: control, smoke, train).
+- **Trains and evaluates** a control baseline, a smoke test, the full model, then the best checkpoint.
+- **Reviews** results automatically: syncs outputs into a manifest and writes a structured review with metric deltas.
+- **Guards** the run by validating the version contract (required files and configs).
+- **Proposes** bounded ablations for the next version, so the loop can repeat.
+- Ships 3 domains as plugins (`hndsr_vr`, `nlp_lm`, `tabular_cls`); a new domain is added by implementing one protocol and a `domain.yaml`.
 
-```
-    ┌──────────────────────────────────────────┐
-    │                                          │
-    ▼                                          │
-  Plan ──→ Execute ──→ Guard ──→ Review ──→ Improve
-    │                                          │
-    └──────────────────────────────────────────┘
+## Architecture
+
+`chakra aavart` is `run_aavart()` in `src/chakra/chakra_cli.py`. The order below is traced from that function: Review (sync + review) runs before Guard (validate), and Improve runs last.
+
+```mermaid
+flowchart LR
+    CLI["chakra aavart<br/>run_aavart()"] --> Sutra["Sutra (Plan)<br/>scaffold_version"]
+    Sutra --> Ctl["Yantra: control baseline<br/>(if control config exists)"]
+    Ctl --> Smoke["Yantra: smoke test<br/>(if smoke config exists)"]
+    Smoke --> Train["Yantra: full training<br/>domain train_runner"]
+    Train --> Eval["Yantra: evaluate best checkpoint<br/>domain evaluate_runner"]
+    Eval --> Vimarsh["Vimarsh (Review)<br/>sync_run + review_run"]
+    Vimarsh --> Rakshak["Rakshak (Guard)<br/>validate_version"]
+    Rakshak --> Manthan["Manthan (Improve)<br/>next_ablation"]
+    Manthan --> Decision{"Decision"}
+    Decision -->|"good results"| Freeze["Freeze version"]
+    Decision -->|"needs work"| Fork["Fork next version<br/>with proposed ablations"]
+    Fork -.->|"repeat"| Sutra
+    Reg[("domain_registry<br/>domain.yaml plugins")] -.-> Train
+    Reg -.-> Eval
 ```
 
 | # | Stage | What Happens |
 |---|-------|-------------|
 | 1 | **Plan** | Scaffold version assets. Freeze configs. Define the hypothesis. |
-| 2 | **Execute** | Train control baseline → smoke test → full training → evaluate. |
-| 3 | **Guard** | Validate that all required files and contracts are satisfied. |
-| 4 | **Review** | Sync results. Generate metric deltas. Produce a structured roast. |
+| 2 | **Execute** | Train control baseline, smoke test, full training, then evaluate. |
+| 3 | **Review** | Sync results. Generate metric deltas. Produce a structured roast. |
+| 4 | **Guard** | Validate that all required files and contracts are satisfied. |
 | 5 | **Improve** | Analyze findings. Propose bounded ablation suggestions for next version. |
 
 When the cycle completes, the system either **freezes** the version (if results are good) or **forks** a new version with proposed improvements. Then the cycle repeats.
@@ -67,22 +80,22 @@ Each stage has a Sanskrit name that reflects its purpose:
 
 ---
 
-## Shipped Domains & Real Results
+## Shipped Domains & Results
 
-| Domain | Task | Metric | Control Baseline | Trained Model | Δ |
-|--------|------|--------|-----------------|--------------|---|
-| **`hndsr_vr`** | Satellite super-resolution | PSNR ↑ | Bicubic baseline | SR3 diffusion | — |
-| **`nlp_lm`** | Character-level language model | BPB ↓ | Bigram: **6.38** | GPT-nano: **3.59** | **44% ↓** |
-| **`tabular_cls`** (Iris) | Flower classification | Accuracy ↑ | Logistic: **16.7%** | MLP: **93.3%** | **+76.7pp** |
-| **`tabular_cls`** (Titanic) | Survival prediction | Accuracy ↑ | Logistic: **58.3%** | MLP: **83.6%** | **+25.3pp** |
+| Domain | Task | Metric | Control Baseline | Trained Model | Source in repo |
+|--------|------|--------|-----------------|--------------|----------------|
+| **`nlp_lm`** | Character-level LM (tiny Shakespeare) | BPB (lower is better) | Bigram: **6.38** | GPT-nano: **3.59** (44% lower) | `benchmarks/nlp_lm_registry.json`, `docs/quickstart.md` |
+| **`tabular_cls`** (Iris) | Flower classification | Accuracy | Untrained logistic: **16.67%** | MLP: **93.33%** (+76.7pp) | `benchmarks/tabular_cls_registry.json`, `docs/quickstart.md` |
+| **`tabular_cls`** (Titanic) | Survival prediction | Accuracy | Logistic: **58.3%** (earlier README figure) | MLP: **83.63%** | `docs/quickstart.md` |
+| **`hndsr_vr`** | Satellite super-resolution (4x smoke pack) | PSNR / SSIM | Bicubic: **30.60 / 0.737** | SR3 CPU smoke run: **7.96 / 0.007** | `benchmarks/hndsr_vr_registry.json` |
 
-> All results above are real, measured outputs from runs executed during development — not estimates.
+> The `hndsr_vr` row is a CPU smoke run that only exercises the pipeline; it does not beat bicubic. Per-domain results are reported by the runners; committed review files are in `reports/reviews/`.
 
 ---
 
 ## Quick Start
 
-> 📖 **For the full guide** see the [Chakra CLI docs](https://the-harsh-vardhan.github.io/Chakra-Autonomous-Research-System/) — covers every command, config option, execution mode, troubleshooting path, and how to add your own domain. For a 5-minute walkthrough, see the [Quickstart](docs/quickstart.md). For the project's evolution story, see the [Journey](JOURNEY.md).
+> 📖 **For the full guide** see the [Chakra CLI docs](https://the-harsh-vardhan.github.io/Chakra-Autonomous-Research-System/) — covers every command, config option, execution mode, troubleshooting path, and how to add your own domain. For a 5-minute walkthrough, see the [Quickstart](docs/quickstart.md).
 
 ### 1. Install
 
@@ -153,7 +166,7 @@ python -m chakra --domain tabular_cls validate-version --version v1.0
 
 ---
 
-## Architecture
+## Code Layout
 
 ```
 chakra/
@@ -294,10 +307,26 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full tutorial.
 python -m pytest tests/ -v
 ```
 
-47 tests across all domains and core infrastructure:
+66 test functions across all domains and core infrastructure:
 
-| Suite | Tests | Coverage |
-|-------|-------|----------|
+| Suite | Test functions |
+|-------|-------|
+| `test_core.py` | 16 |
+| `test_tabular_domain.py` | 9 |
+| `test_domain_registry.py` | 7 |
+| `test_nlp_domain.py` | 6 |
+| `test_runtime_contract.py` | 6 |
+| `test_execution_engine.py` | 6 |
+| `test_cli_dispatch.py` | 4 |
+| `test_domain_strategy.py` | 4 |
+| `test_execution_integration.py` | 3 |
+| `test_execution_lifecycle.py` | 3 |
+| `test_lifecycle_review.py` | 1 |
+| `test_notebook_contract.py` | 1 |
+
+CI runs the suite on Python 3.10 to 3.13 (`.github/workflows/test.yml`).
+
+-------|-------|----------|
 | `test_core.py` | 16 | Config, utils, seeding, registry |
 | `test_tabular_domain.py` | 9 | Discovery, protocol, models, dataset, metrics |
 | `test_nlp_domain.py` | 6 | GPT-nano, bigram, dataset, metrics |
